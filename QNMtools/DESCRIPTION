@@ -1,0 +1,20 @@
+Package: QNMtools
+Type: Package
+Title: Tools for QNM comparisons  
+Version: 0.1.0
+Author: c(
+    person("Sean", "Lucey",    email = "Sean.Lucey@NOAA.gov",    
+           role = c("aut", "cre")),
+    person("Sarah", "Gaichas", email = "Sarah.Gaichas@NOAA.gov", role = "aut"),
+    person("Jamie", "Tam", email = "", role = "aut"),
+    person("Alida", "Bundy", email = "", role = "aut"),
+    person("Rob", "Gamble", email = "RObert.Gamble@NOAA.gov", role = "aut"))
+Maintainer: Sean Lucey <Sean.Lucey@NOAA.gov>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: GPL (>= 2)
+Imports:
+    data.table
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1
