@@ -80,6 +80,11 @@ Rpath2Qpress <- function(Rpath.params, link.strength = 0.1){
   #Remove prey names
   qpress.prey<- qpress.prey[,-1]
 
+  #Run Rpath to generate Rpath.obj
+  Rpath.obj <- rpath(Rpath.params)
+  qpress.pred <- write.Rpath(Rpath.obj, morts = T)
+
+
 #Need to make write functions able to output to RData
 x <- copy(GOM)
 ngroup <- x$NUM_LIVING + x$NUM_DEAD
@@ -110,6 +115,7 @@ setnames(predM, paste('V',  1:x$NUM_LIVING,    sep = ''),
          paste('M2.', x$Group[1:x$NUM_LIVING], sep = ''))
 qpress.pred <- as.data.table(cbind(out, predM))
 
+#Go to here I beleieve.......
 M2.cols <- names(qpress.pred)[which(!names(qpress.pred) %in% c('Group', 'type',
                                                                'PB', 'M0', 'Fmort[1:ngroup, ]'))]
 qpress.pred[, mort.sum := rowSums(.SD), .SDcols = M2.cols]
