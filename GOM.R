@@ -1,44 +1,52 @@
 #EMAX GOM model as modified by Gaichas for the herring assessment
+if(Sys.info()['sysname']=="Windows"){
+  data.dir <- "C:/Users/Sean.Lucey/Desktop/Rpath_code/data"
+  out.dir  <- "C:/Users/Sean.Lucey/Desktop/Rpath_code/outputs"
+}
+if(Sys.info()['sysname']=="Linux"){
+  data.dir <- "/home/slucey/slucey/Rpath_code/data"
+  out.dir  <- "/home/slucey/slucey/Rpath_code/outputs"
+}
 
 library(Rpath); library(data.table)
 
- 
-groups <- c("Phytoplankton- Primary Producers", "Bacteria", "Microzooplankton", 
-            "Small copepods", "Large Copepods", "Gelatinous Zooplankton", "Micronekton", 
-            "Macrobenthos- polychaetes", "Macrobenthos- crustaceans", "Macrobenthos- molluscs", 
-            "Macrobenthos- other", "Megabenthos- filterers", "Megabenthos- other", 
-            "Shrimp et al.", "Larval-juv fish- all", "Small Pelagics- commercial", 
-            "Small Pelagics- other", "Small Pelagics- squid", "Small Pelagics- anadromous", 
-            "Medium Pelagics- (piscivores & other)", "Demersals- benthivores", 
-            "Demersals- omnivores", "Demersals- piscivores", "Sharks- pelagics", 
-            "HMS", "Pinnipeds", "Baleen Whales", "Odontocetes", "Sea Birds", 
+
+groups <- c("Phytoplankton- Primary Producers", "Bacteria", "Microzooplankton",
+            "Small copepods", "Large Copepods", "Gelatinous Zooplankton", "Micronekton",
+            "Macrobenthos- polychaetes", "Macrobenthos- crustaceans", "Macrobenthos- molluscs",
+            "Macrobenthos- other", "Megabenthos- filterers", "Megabenthos- other",
+            "Shrimp et al.", "Larval-juv fish- all", "Small Pelagics- commercial",
+            "Small Pelagics- other", "Small Pelagics- squid", "Small Pelagics- anadromous",
+            "Medium Pelagics- (piscivores & other)", "Demersals- benthivores",
+            "Demersals- omnivores", "Demersals- piscivores", "Sharks- pelagics",
+            "HMS", "Pinnipeds", "Baleen Whales", "Odontocetes", "Sea Birds",
             "Discard", "Detritus-POC", "Fishery")
 type <- c(1, rep(0, 28), rep(2, 2), 3)
 
 gom.par <- create.rpath.params(groups, type)
 
-gom.par$model[, Biomass := c(22.126, 5.484, 4.885, 10.403, 11.955, 1.283, 4.874, 
-                             18.942, 4.04, 9.866, 24.936, 2.879, 3.505, 0.396, 0.207, 
-                             5.714, 1.275, 0.29, 0.153, 0.0229, 2.981, 0.4, 4.006, 
-                             0.00296, 0.00587, 0.063, 0.602, 0.0336, 0.0035, NA, 
+gom.par$model[, Biomass := c(22.126, 5.484, 4.885, 10.403, 11.955, 1.283, 4.874,
+                             18.942, 4.04, 9.866, 24.936, 2.879, 3.505, 0.396, 0.207,
+                             5.714, 1.275, 0.29, 0.153, 0.0229, 2.981, 0.4, 4.006,
+                             0.00296, 0.00587, 0.063, 0.602, 0.0336, 0.0035, NA,
                              NA, NA)]
 
-gom.par$model[, PB := c(163.143, 91.25, 72, 30.918, 35, 35, 14.25, 2.55, 3.3, 2.24, 
-                        2.04, 0.864, 1.68, 2, 15, 0.52, 0.44, 1.4, 0.437, 0.649, 
-                        0.459, 0.54, 0.55, 0.15, 0.5, 0.0673, 0.042, 0.04, 0.275, 
+gom.par$model[, PB := c(163.143, 91.25, 72, 30.918, 35, 35, 14.25, 2.55, 3.3, 2.24,
+                        2.04, 0.864, 1.68, 2, 15, 0.52, 0.44, 1.4, 0.437, 0.649,
+                        0.459, 0.54, 0.55, 0.15, 0.5, 0.0673, 0.042, 0.04, 0.275,
                         rep(NA, 3))]#55.84456, 29.90675, NA)]
 
-gom.par$model[, QB := c(0, 380.208, 242.424, 127.75, 109.5, 146, 36.5, 17.5, 21, 
-                        13.72, 11.777, 10, 11.03, 5, 45, 1.882, 2, 2, 2, 1.428, 
-                        0.9, 0.9, 1.014, 0.623, 2.362, 4.85, 2.3, 8.5, 5.362, 
+gom.par$model[, QB := c(0, 380.208, 242.424, 127.75, 109.5, 146, 36.5, 17.5, 21,
+                        13.72, 11.777, 10, 11.03, 5, 45, 1.882, 2, 2, 2, 1.428,
+                        0.9, 0.9, 1.014, 0.623, 2.362, 4.85, 2.3, 8.5, 5.362,
                         rep(NA, 3))]
 
 #float path_EE[NUM_GROUPS+1] = { 1, 0.8798624, 0.8832949, 0.9413487, 0.9117724, 0.7440153, 0.9114986, 0.8848614, 0.8999999, 0.8819566, 0.8633214, 0.8862541, 0.8823805, 0.8879386, 0.8046172, 0.8990406, 0.8963319, 0.9790097, 0.9941966, 0.5794412, 0.8889518, 0.9287031, 0.910743,  0.878319, 0.8430014, 0.8114244, 0.2865187, 0.01683634, 0.1337793, 0.1249854, 0.005459445, 0.9885055, 0};
 gom.par$model[, BioAcc := c(rep(0, 31), NA)]
 
-gom.par$model[, Unassim := c(0, 0.2, 0.1, 0.25, 0.25, 0.35, 0.25, 0.5, 0.5, 0.6, 
-                             0.5, 0.7, 0.3, 0.3, 0.15, 0.15, 0.35, 0.15, 0.15, 
-                             0.15, 0.3, 0.35, 0.15, 0.15, 0.15, 0.2, 0.2, 0.2, 
+gom.par$model[, Unassim := c(0, 0.2, 0.1, 0.25, 0.25, 0.35, 0.25, 0.5, 0.5, 0.6,
+                             0.5, 0.7, 0.3, 0.3, 0.15, 0.15, 0.35, 0.15, 0.15,
+                             0.15, 0.3, 0.35, 0.15, 0.15, 0.15, 0.2, 0.2, 0.2,
                              0.15, 0, 0, NA)]
 
 #float path_DtImp[NUM_GROUPS+1] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -110,3 +118,79 @@ GOM <- rpath(gom.par, 'Gulf of Maine')
 gom.scence <- rsim.scenario(GOM, gom.par, 1:100)
 gom.run <- rsim.run(gom.scence)
 rsim.plot(gom.run, groups)
+
+#Create community matrices for Qpress
+GOM.10 <- Rpath2Qpress(GOM.params, .1, .1)
+GOM.20 <- Rpath2Qpress(GOM.params, .2, .2)
+GOM.30 <- Rpath2Qpress(GOM.params, .3, .3)
+GOM.40 <- Rpath2Qpress(GOM.params, .4, .4)
+GOM.50 <- Rpath2Qpress(GOM.params, .5, .5)
+
+write.csv(GOM.10, file = file.path(out.dir, 'GOM_Qpress_10.csv'), row.names = F)
+write.csv(GOM.30, file = file.path(out.dir, 'GOM_Qpress_30.csv'), row.names = F)
+
+#MTI
+#Mixed trophic impact
+MTI <- function(Rpath, Rpath.params){
+  x <- copy(Rpath.params)
+  f.dc <- data.table(Fishing = rep(0, nrow(x$diet)))
+  DC <- as.data.table(cbind(f.dc, x$diet))
+  DC <- DC[Group != 'Import']
+  DC[, Group := NULL]
+
+  #Need to make write functions able to output to RData
+  y <- copy(Rpath)
+  ngroup <- y$NUM_LIVING + y$NUM_DEAD
+
+  #Calculate F mortality
+  totcatch <- y$Catch + y$Discards
+  Fmort    <- as.data.frame(totcatch / y$BB[row(as.matrix(totcatch))])
+  setnames(Fmort, paste0('V',  seq_along(y$NUM_GEARS)),
+           paste0('F.', y$Group[(ngroup +1):y$NUM_GROUPS]))
+  Fmort <- Fmort[1:ngroup, ]
+
+  #Calculate M2
+  bio  <- y$BB[1:y$NUM_LIVING]
+  BQB  <- bio * y$QB[1:y$NUM_LIVING]
+  diet <- as.data.frame(y$DC)
+  nodetrdiet <- diet[1:y$NUM_LIVING, ]
+  detrdiet   <- diet[(y$NUM_LIVING +1):ngroup, ]
+  newcons    <- nodetrdiet * BQB[col(as.matrix(nodetrdiet))]
+  predM      <- newcons / bio[row(as.matrix(newcons))]
+  detcons    <- detrdiet * BQB[col(as.matrix(detrdiet))]
+  predM      <- rbind(predM, detcons)
+  setnames(predM, paste('V',  1:y$NUM_LIVING,    sep = ''),
+           paste('M2.', y$Group[1:y$NUM_LIVING], sep = ''))
+
+  FC <- as.data.table(cbind(Fmort, predM))
+
+  FC[, mort.sum := rowSums(.SD), .SDcols = names(FC)]
+  FC <- FC[, .SD / mort.sum, .SDcols = names(FC)]
+  FC[, mort.sum := NULL]
+
+  #Merge pred and prey
+  MTI <- as.matrix(DC + FC)
+
+  #Add small increase
+  MTI.diag <- diag(MTI) + 1
+
+  diag(MTI) <- MTI.diag
+
+  #Inverse
+  out <- MASS::ginv(MTI)
+
+  return(out)
+}
+
+MTI.GOM <- MTI(GOM, GOM.params)
+
+n.prey <- nrow(MTI.GOM)
+opar <- par()
+par(mfcol = c(n.prey, 1), mar = c(0,0,0,0))
+for(i in 1:n.prey){
+  barplot(MTI.GOM[i,])
+}
+
+
+
+

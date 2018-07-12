@@ -62,7 +62,7 @@ make.qnm <- function(modmat){
 #'
 #'@return Output object for Qpress
 #'@export
-Rpath2Qpress <- function(Rpath.params, link.strength = 0.1){
+Rpath2Qpress <- function(Rpath.params, pred.link = 0.1, prey.link = 0.1){
   qpress.prey <- Rpath.params$diet
   pred.cols   <- names(qpress.prey)[which(names(qpress.prey) != 'Group')]
   qpress.prey <- qpress.prey[Group != 'Import']
@@ -78,110 +78,41 @@ Rpath2Qpress <- function(Rpath.params, link.strength = 0.1){
     qpress.prey <- merge(qpress.prey, det.pred, by = 'Group')
   }
   #Remove prey names
-  qpress.prey<- qpress.prey[,-1]
+  qpress.prey <- qpress.prey[,-1]
 
   #Run Rpath to generate Rpath.obj
   Rpath.obj <- rpath(Rpath.params)
-  qpress.pred <- write.Rpath(Rpath.obj, morts = T)
+  qpress.pred <- as.data.table(write.Rpath(Rpath.obj, morts = T))
+  #Need to normalize mortality terms
+  M2.cols <- names(qpress.pred)[which(!names(qpress.pred) %in%
+                                        c('Group', 'type', 'PB', 'M0',
+                                          'Fmort[1:ngroup, ]'))]
+  qpress.pred[, mort.sum := rowSums(.SD), .SDcols = M2.cols]
+  qpress.pred <- qpress.pred[, .SD / mort.sum, .SDcols = M2.cols, by = Group]
+  qpress.pred[is.na(qpress.pred)] <- 0
 
+  #make qpress.pred negative
+  qpress.pred[, c('type', 'PB', 'M0', 'Fmort[1:ngroup, ]', 'mort.sum') := NULL]
+  qpress.pred <- qpress.pred[, .SD * -1, .SDcol = M2.cols, by = Group]
 
-#Need to make write functions able to output to RData
-x <- copy(GOM)
-ngroup <- x$NUM_LIVING + x$NUM_DEAD
-out <- data.frame(Group    = x$Group[1:ngroup],
-                  type     = x$type [1:ngroup],
-                  PB       = x$PB   [1:ngroup])
-#Calculate M0
-M0  <- c(x$PB[1:x$NUM_LIVING] * (1 - x$EE[1:x$NUM_LIVING]),
-         x$EE[(x$NUM_LIVING + 1):ngroup])
-out <- cbind(out, M0)
-#Calculate F mortality
-totcatch <- x$Catch + x$Discards
-Fmort    <- as.data.frame(totcatch / x$BB[row(as.matrix(totcatch))])
-setnames(Fmort, paste('V',  1:x$NUM_GEARS,                     sep = ''),
-         paste('F.', x$Group[(ngroup +1):x$NUM_GROUPS], sep = ''))
-out  <- cbind(out, Fmort[1:ngroup, ])
-#Calculate M2
-bio  <- x$BB[1:x$NUM_LIVING]
-BQB  <- bio * x$QB[1:x$NUM_LIVING]
-diet <- as.data.frame(x$DC)
-nodetrdiet <- diet[1:x$NUM_LIVING, ]
-detrdiet   <- diet[(x$NUM_LIVING +1):ngroup, ]
-newcons    <- nodetrdiet * BQB[col(as.matrix(nodetrdiet))]
-predM      <- newcons / bio[row(as.matrix(newcons))]
-detcons    <- detrdiet * BQB[col(as.matrix(detrdiet))]
-predM      <- rbind(predM, detcons)
-setnames(predM, paste('V',  1:x$NUM_LIVING,    sep = ''),
-         paste('M2.', x$Group[1:x$NUM_LIVING], sep = ''))
-qpress.pred <- as.data.table(cbind(out, predM))
+  #Ensure that the matrices are square
+  for(idead in seq_along(detrital.groups)){
+    det.M2 <- data.table(Group = qpress.pred[, Group], V1 = 0)
+    setnames(det.M2, 'V1', paste0('M2.', detrital.groups[idead]))
+    qpress.pred <- merge(qpress.pred, det.M2, by = 'Group')
+  }
+  #Remove prey names
+  qpress.pred <- qpress.pred[,-1]
+  #transpose pred matrix because predators need to be the rows
+  qpress.pred <- t(qpress.pred)
 
-#Go to here I beleieve.......
-M2.cols <- names(qpress.pred)[which(!names(qpress.pred) %in% c('Group', 'type',
-                                                               'PB', 'M0', 'Fmort[1:ngroup, ]'))]
-qpress.pred[, mort.sum := rowSums(.SD), .SDcols = M2.cols]
-qpress.pred <- qpress.pred[, .SD / mort.sum, .SDcols = M2.cols, by = Group]
-qpress.pred[is.na(qpress.pred)] <- 0
+  #Merge pred and prey matrices
+  commat <- qpress.pred + qpress.prey
 
-# for(ipred in seq_along(M2.cols)){
-#   setnames(qpress.pred, M2.cols[ipred], 'V1')
-#   qpress.pred[V1 < .1, V1 := 0]
-#   setnames(qpress.pred, 'V1', M2.cols[ipred])
-# }
+  #Pare down links based on input link strengths
+  commat[commat >= -1 * pred.link & commat <= prey.link] <- 0
 
-#make qpress.pred negative
-qpress.pred[, c('type', 'PB', 'M0', 'Fmort[1:ngroup, ]') := NULL]
-qpress.pred <- qpress.pred[, .SD * -1, .SDcol = M2.cols, by = Group]
+  return(commat)
+}
 
-
-#Ensure that the matrices are square, transpose pred matrix
-detritus.m2 <- data.table(qpress.pred[, 'Group'], M2.Detritus = 0, M2.Discards = 0)
-qpress.pred <- merge(qpress.pred, detritus.m2, by = 'Group')
-qpress.pred<-qpress.pred[, .SD, .SDcols = c(M2.cols, 'M2.Detritus', 'M2.Discards')]
-prednames<-as.character(detritus.DC$Group)
-colnames(qpress.pred)<-prednames
-setcolorder(qpress.pred,groupnames)
-qpress.pred<-t(qpress.pred)
-colnames(qpress.pred)<-groupnames
-
-#Merge pred and prey matrices
-
-qpress.GOM<-qpress.pred+qpress.prey
-
-# qpress.GOM <- t(qpress.pred[, .SD, .SDcols = c(M2.cols, 'M2.Detritus', 'M2.Discards')]) +
-#   qpress.prey[, .SD, .SDcols = c(pred.cols, 'Detritus', 'Discards')]
-
-
-
-
-#add/change  row and column names
-
-FG<-as.vector(groupnames)
-qpress.GOM<-cbind(FG, qpress.GOM)
-
-save(qpress.GOM, file="qpress.GOM.RData")
-
-
-#remove values below 10%, 20%, 30%, 40%, 50%
-
-GOMqnm10<-qpress.GOM
-GOMqnm10[GOMqnm10 >=-0.10 & GOMqnm10<= 0.10]<-0
-
-GOMqnm20<-qpress.GOM
-GOMqnm20[GOMqnm20 >=-0.20 & GOMqnm20<= 0.20]<-0
-
-GOMqnm30<-qpress.GOM
-GOMqnm30[GOMqnm20 >=-0.30 & GOMqnm20<= 0.30]<-0
-
-GOMqnm40<-qpress.GOM
-GOMqnm40[GOMqnm40 >=-0.40 & GOMqnm40<= 0.40]<-0
-
-GOMqnm50<-qpress.GOM
-GOMqnm50[GOMqnm50 >=-0.50 & GOMqnm20<= 0.50]<-0
-
-setwd("~/JCT work/WGNARS/ecosim to qpress/GOMmodel")
-save(GOMqnm10, file='GOMqnm10.RData')
-save(GOMqnm20, file='GOMqnm20.RData')
-save(GOMqnm30, file='GOMqnm30.RData')
-save(GOMqnm40, file='GOMqnm40.RData')
-save(GOMqnm50, file='GOMqnm50.RData')
 
