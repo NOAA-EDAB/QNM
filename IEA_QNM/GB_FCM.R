@@ -18,7 +18,7 @@ library(data.table); library(FCMapper)
 
 #-------------------------------------------------------------------------------
 #Load adjaceny matrix developed using mental modeler
-GB <- as.matrix(read.csv(file = file.path(data.dir, 'GBmerged_RemoveProfit_Culture_Feedbacks_2HabPPlinks.csv'),
+GB <- as.matrix(read.csv(file = file.path(data.dir, 'GB_QNM_adjacencyMat.csv'),
                row.names = 1))
 GB[is.na(GB)] <- 0
 concept.names <- row.names(GB)
