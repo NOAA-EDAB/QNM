@@ -55,31 +55,54 @@ for(igroup in 1:n.pred){
 #Plot comparison plots
 #Gulf of Maine
 #Scenario 1 - Phytoplankton up
-gom.phyto.up <- data.table(mti = gom.mti[, 1]) 
+out.order <- GOM.28b$model$Group
+gom.phyto.up <- data.table(Group = out.order, mti = gom.mti[, 1]) 
 
 #Load QPress results
-out.order <- GOM.28b$model$Group
+# out.order <- GOM.28b$model$Group
+# for(iscene in 1:5){
+#   qpress.results <- as.data.table(read.csv(file.path(qpress.dir, paste0(
+#     'GOMresults', iscene, 'Phytoplankton_up.csv'))))
+#   setnames(qpress.results, c('X', 'X.', 'X0', 'X..1'), c('Group', 'Neg', 'Neu', 'Pos'))
+#   
+#   #Convert to prop
+#   qpress.results[Pos > Neg, Value := Pos / 1000]
+#   qpress.results[Neg > Pos, Value := -1 * (Neg / 1000)]
+#   qpress.results[, out.order := factor(Group, levels = out.order)]
+#   setorder(qpress.results, out.order)
+#   
+#   scene.results <- qpress.results[, list(Value)]
+#   setnames(scene.results, 'Value', paste0('Model', iscene))
+#   
+#   gom.phyto.up <- cbind(gom.phyto.up, scene.results)
+# }
+
 for(iscene in 1:5){
   qpress.results <- as.data.table(read.csv(file.path(qpress.dir, paste0(
     'GOMresults', iscene, 'Phytoplankton_up.csv'))))
   setnames(qpress.results, c('X', 'X.', 'X0', 'X..1'), c('Group', 'Neg', 'Neu', 'Pos'))
   
   #Convert to prop
-  qpress.results[Pos > Neg, Value := Pos / 1000]
-  qpress.results[Neg > Pos, Value := -1 * (Neg / 1000)]
-  qpress.results[, out.order := factor(Group, levels = out.order)]
-  setorder(qpress.results, out.order)
+  qpress.results[, Value := (Pos - Neg) / 1000]
   
-  scene.results <- qpress.results[, list(Value)]
+  scene.results <- qpress.results[, list(Group, Value)]
   setnames(scene.results, 'Value', paste0('Model', iscene))
   
-  gom.phyto.up <- cbind(gom.phyto.up, scene.results)
+  gom.phyto.up <- merge(gom.phyto.up, scene.results, by = 'Group', 
+                        all.x = T)
 }
 
 #Fix NAs
 gom.phyto.up[is.na(gom.phyto.up)] <- 0
 
-png(file = file.path(out.dir, 'GOM_Phyto_up.png'), 
+#Set order
+gom.phyto.up[, out.order := factor(Group, levels = out.order)]
+setorder(gom.phyto.up, out.order)
+
+#Drop group column
+gom.phyto.up[, c('Group', 'out.order') := NULL]
+
+png(file = file.path(out.dir, 'GOM_Phyto_up_2.png'), 
     height = 1500, width = 2000, res = 200) 
 par(mar = c(10, 6, 4, 2))
 bars <- barplot(as.matrix(t(gom.phyto.up)), beside = T, 
