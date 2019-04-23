@@ -3,8 +3,9 @@
 
 #User Parameters
 if(Sys.info()['sysname']=="Windows"){
-  data.dir <- "C:\\Users\\Sean.Lucey\\Desktop\\Rpath_code\\data"
-  out.dir  <- "C:\\Users\\Sean.Lucey\\Desktop\\Rpath_code\\outputs"
+  qnm.dir    <- "C:\\Users\\Sean.Lucey\\Desktop\\QNM\\QNMcompare"
+  qpress.dir <- file.path(qnm.dir, "Qpress_results")
+  out.dir    <- file.path(qnm.dir, "Outputs")
 }
 
 if(Sys.info()['sysname']=="Linux"){
@@ -15,7 +16,7 @@ if(Sys.info()['sysname']=="Linux"){
 library(Rpath); library(data.table)
 
 #Load GOM model
-load(file.path(data.dir, 'EMAX_GOM_28groups_renamed.RData'))
+load(file.path(qnm.dir, 'EMAX_GOM_28groups_renamed.RData'))
 
 #Run Ecopath
 GOM <- rpath(GOM.28b, "Gulf of Maine")
@@ -23,7 +24,7 @@ GOM <- rpath(GOM.28b, "Gulf of Maine")
 #Run MTI
 gom.mti <- MTI(GOM, GOM.28b)
 
-#Plot results
+#Plot MTI results
 n.pred <- ncol(gom.mti)
 labs <- GOM.28b$model$Group
 
@@ -50,4 +51,46 @@ for(igroup in 1:n.pred){
     dev.off()
   } 
 }
+
+#Plot comparison plots
+#Gulf of Maine
+#Scenario 1 - Phytoplankton up
+gom.phyto.up <- data.table(mti = gom.mti[, 1]) 
+
+#Load QPress results
+out.order <- GOM.28b$model$Group
+for(iscene in 1:5){
+  qpress.results <- as.data.table(read.csv(file.path(qpress.dir, paste0(
+    'GOMresults', iscene, 'Phytoplankton_up.csv'))))
+  setnames(qpress.results, c('X', 'X.', 'X0', 'X..1'), c('Group', 'Neg', 'Neu', 'Pos'))
+  
+  #Convert to prop
+  qpress.results[Pos > Neg, Value := Pos / 1000]
+  qpress.results[Neg > Pos, Value := -1 * (Neg / 1000)]
+  qpress.results[, out.order := factor(Group, levels = out.order)]
+  setorder(qpress.results, out.order)
+  
+  scene.results <- qpress.results[, list(Value)]
+  setnames(scene.results, 'Value', paste0('Model', iscene))
+  
+  gom.phyto.up <- cbind(gom.phyto.up, scene.results)
+}
+
+#Fix NAs
+gom.phyto.up[is.na(gom.phyto.up)] <- 0
+
+png(file = file.path(out.dir, 'GOM_Phyto_up.png'), 
+    height = 1500, width = 2000, res = 200) 
+par(mar = c(10, 6, 4, 2))
+bars <- barplot(as.matrix(t(gom.phyto.up)), beside = T, 
+                col = c('#7fc97f','#beaed4','#fdc086','#ffff99',
+                        '#386cb0','#f0027f'))
+text(cex = .8, x = colMeans(bars) - .25, y = -1.1, labs, 
+     xpd = NA, srt = 90, adj = 1)
+abline(v = bars[6, ] + 1, lty = 2, col = 'lightgrey')
+legend(97, 1.2, legend = c('MTI', '10%', '20%', '30%', '40%', '50%'),
+       fill = c('#7fc97f','#beaed4','#fdc086','#ffff99', '#386cb0',
+               '#f0027f'), xpd = NA, xjust = .5, horiz = T)
+
+dev.off()
 
