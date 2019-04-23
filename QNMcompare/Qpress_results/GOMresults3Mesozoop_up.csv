@@ -1,0 +1,26 @@
+"","-","0","+"
+"Bivalves",1000,0,0
+"D piscivores",0,1000,0
+"Detritus",430,1,569
+"Discards",699,0,301
+"Fishery",0,0,1000
+"Large pelagics",0,0,1000
+"Macrozoop",263,0,737
+"Megabenthos",0,1000,0
+"Meiofauna",430,1,569
+"Mesozoop",0,0,1000
+"Microflora",569,1,430
+"Microzoop",741,0,259
+"Other molluscs",816,0,184
+"Other pelagic mesopelagic",0,0,1000
+"Phytoplankton",1000,0,0
+"Sea birds",301,0,699
+"Seals",1000,0,0
+"Sharks",1000,0,0
+"Shrimp",569,0,431
+"Small crab other arthropoda",430,1,569
+"Small pelagics",315,0,685
+"Squids",263,0,737
+"Toothed cetaceans",487,0,513
+"Whales",469,0,531
+"Worms",531,0,469
