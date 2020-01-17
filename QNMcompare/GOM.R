@@ -1,12 +1,13 @@
 #EMAX GOM model as modified by Gaichas for the herring assessment
 if(Sys.info()['sysname']=="Windows"){
-  data.dir <- "C:/Users/Sean.Lucey/Desktop/Rpath_code/data"
-  out.dir  <- "C:/Users/Sean.Lucey/Desktop/Rpath_code/outputs"
+  main.dir <- "C:/Users/Sean.Lucey/Desktop/QNM/QNMcompare"
 }
+
 if(Sys.info()['sysname']=="Linux"){
-  data.dir <- "/home/slucey/slucey/Rpath_code/data"
-  out.dir  <- "/home/slucey/slucey/Rpath_code/outputs"
+  main.dir  <- "/home/slucey/slucey/QNM/QNMcompare"
 }
+
+data.dir <- file.path(main.dir, 'data')
 
 library(Rpath); library(data.table)
 
@@ -111,6 +112,24 @@ setnames(gom.par$diet, c(paste('V', 1:30, sep = '')), c('Group', DC.groups))
 
 check.rpath.params(gom.par)
 
+#Add pedigree - converted from EMAX documentation
+#7 = 0.1 ... 0 = 0.8
+gom.par$pedigree[, B := c(0.3, 0.6, 0.6, 0.4, 0.4, 0.5, 0.5, 0.4, 0.4, 0.4, 0.4,
+                          0.4, 0.5, 0.3, 0.5, 0.3, 0.4, 0.4, 0.4, 0.4, 0.3, 0.3,
+                          0.3, 0.5, 0.5, 0.4, 0.4, 0.4, 0.4, 0.6, 0.6, 1)]
+gom.par$pedigree[, PB := c(0.3,	0.6, 0.6,	0.5, 0.5,	0.6, 0.6,	0.5, 0.5,	0.5, 0.5,
+                           0.5,	0.5, 0.5,	0.6, 0.1,	0.3, 0.3,	0.3, 0.3,	0.3, 0.3,
+                           0.3,	0.4, 0.2,	0.5, 0.5,	0.5, 0.5, 0.7, 0.7, 1)]
+gom.par$pedigree[, QB := c(1,	  0.6, 0.6, 0.5, 0.5, 0.6, 0.6, 0.5, 0.5, 0.5, 0.5,
+                           0.5,	0.5, 0.5, 0.6, 0.1, 0.3, 0.3, 0.3, 0.3, 0.1, 0.1,
+                           0.1,	0.4, 0.4, 0.5, 0.5, 0.5, 0.5, 0.7, 0.7, 1)]
+gom.par$pedigree[, Diet := c(1,	  0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6,
+                             0.6,	0.6, 0.6, 0.5, 0.3, 0.4, 0.4, 0.4, 0.3, 0.3, 0.3,
+                             0.3,	0.4, 0.4, 0.5, 0.5, 0.5, 0.4, 0.7, 0.7, 1)]
+gom.par$pedigree[, Fishery := c(1, 1, 1, 1, 1, 0.8, 1, 0.8, 0.8, 0.8, 0.8, 0.4, 
+                                0.4, 0.3, 0.8, 0.3, 0.5, 0.3, 0.4, 0.3, 0.3, 0.3,
+                                0.3, 0.5, 0.5, 0.5, 0.5, 1, 1, 0.7, 0.7, 0.5)]
+
 #Run model
 GOM <- rpath(gom.par, 'Gulf of Maine')
 
@@ -118,6 +137,9 @@ GOM <- rpath(gom.par, 'Gulf of Maine')
 gom.scence <- rsim.scenario(GOM, gom.par, 1:100)
 gom.run <- rsim.run(gom.scence)
 rsim.plot(gom.run, groups)
+
+#Output GOM model
+save(gom.par, file = file.path(data.dir, 'GOM_EMAX_params.RData'))
 
 #Create community matrices for Qpress
 GOM.10 <- Rpath2Qpress(GOM.params, .1, .1)
